@@ -1,83 +1,114 @@
 'use strict';
-var randomNumber = function(min, max) {
+var COUNT = 8;
+
+var randomNumber = function (min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
-var arrRandomElem = function(arrName) {
-  return arrName[randomNumber(0, arrName.length-1)];
+var arrRandomElem = function (arrName) {
+  return arrName[randomNumber(0, arrName.length - 1)];
 };
 
-var offerTitles = ["Большая уютная квартира", "Маленькая неуютная квартира", "Огромный прекрасный дворец", "Маленький ужасный дворец", "Красивый гостевой домик", "Некрасивый негостеприимный домик", "Уютное бунгало далеко от моря", "Неуютное бунгало по колено в воде"];
-var offerTypes = ['flat', 'house', 'bungalo'];
-var offerChecks = ['12:00', '13:00', '14:00'];
-var offerFeatures = ["wifi", "dishwasher", "parking", "washer", "elevator", "conditioner"];
+var OFFER_TITLES = ['Большая уютная квартира', 'Маленькая неуютная квартира', 'Огромный прекрасный дворец', 'Маленький ужасный дворец', 'Красивый гостевой домик', 'Некрасивый негостеприимный домик', 'Уютное бунгало далеко от моря', 'Неуютное бунгало по колено в воде'];
 
-var neighbor = {
-  "author": {
-    "avatar": 'img/avatars/user{{0' + randomNumber(1, 8) + '}}.png'
-  },
-  "offer": {
-    "title": arrRandomElem(offerTitles),
-    "adress": '{{location.x}}, {{location.y}}', //?
-    "price": randomNumber(1000, 1000000),
-    "type": arrRandomElem(offerTypes),
-    "rooms": randomNumber(1, 5),
-    "guests": randomNumber(1, 10), // max взят произвольно
-    "checkin": arrRandomElem(offerChecks),
-    "checkout": arrRandomElem(offerChecks), // д.б. расчет, т.к. checkout <= checkin
-    "features": function() {
-      var randomFeatures = offerFeatures.slice();
-      randomFeatures.length = randomNumber(1, offerFeatures.length);
-      return randomFeatures;
+var OFFER_TYPES = [
+  {'en': 'flat', 'ru': 'квартира'},
+  {'en': 'house', 'ru': 'дом'},
+  {'en': 'bungalo', 'ru': 'бунгало'}
+];
+
+var OFFER_CHECKS = ['12:00', '13:00', '14:00'];
+var OFFER_FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
+
+var randomFeatures = function (data) {
+  var features = data.slice();
+  features.length = randomNumber(1, data.length);
+  return features;
+}
+
+var sentence = function () {
+  return {
+    'author': {
+      'avatar': 'img/avatars/user0' + randomNumber(1, COUNT) + '.png'
     },
-    "description": '',
-    "photos": []
-  },
-  "location": {
-    "x": randomNumber(300, 900),
-    "y": randomNumber(100, 500)
+    'offer': {
+      'title': arrRandomElem(OFFER_TITLES),
+      'adress': randomNumber(300, 900) + ',' + randomNumber(100, 500),
+      'price': randomNumber(1000, 1000000),
+      'type': arrRandomElem(OFFER_TYPES),
+      'rooms': randomNumber(1, 5),
+      'guests': randomNumber(1, 10),
+      'checkin': arrRandomElem(OFFER_CHECKS),
+      'checkout': arrRandomElem(OFFER_CHECKS),
+      'features': randomFeatures(OFFER_FEATURES),
+      'description': '',
+      'photos': []
+    },
+    'location': {
+      'x': randomNumber(300, 900),
+      'y': randomNumber(100, 500)
+    }
+  };
+};
+
+var sentences = [];
+var createOffers = function () {
+  for (var i = 0; i < COUNT; i++) {
+    sentences.push(sentence());
   }
 };
-
-var neighbors = [];
-for (var i = 0; i < 7; i++) {
-  neighbors[i] = neighbor;
-  var n = neighbors[i];
-  neighbors.push(n);
-}; // почему при i<8 получается 9 элементов массива?
+createOffers();
 
 var pinMap = document.querySelector('.tokyo__pin-map');
-var pinWidth = 75;
-var pinHeight = 94;
+var pinWidth = 56;
+var pinHeight = 75;
 
-var fragment = document.createDocumentFragment();
-for (var n = 0; n < neighbors.length; n++) {
-var newPin = document.createElement('div');
-newPin.className = 'pin';
-newPin.style = 'left: {{' + (neighbors[n].location.x - pinWidth / 2) + '}}px; top: {{' + (neighbors[n].location.y - pinHeight) + '}}px';
-newPin.innerHTML = '<img src="{{' + neighbors[n].author.avatar + '}}" class="rounded" width="40" height="40">';
-// не определяется значение style, не находит src в img
-fragment.appendChild(newPin); // добавляется один и тот же div
-}
-pinMap.appendChild(fragment);
+var renderPin = function (data) {
+  var newPin = document.createElement('div');
+  newPin.className = 'pin';
+  newPin.style = 'left: ' + (data.location.x + pinWidth / 2) + 'px; top: ' + (data.location.y + pinHeight) + 'px';
+  newPin.innerHTML = '<img src="' + data.author.avatar + '" class="rounded" width="40" height="40">';
+  return newPin;
+};
+
+var renderMap = function () {
+  var fragment = document.createDocumentFragment();
+  for (var n = 0; n < sentences.length; n++) {
+    fragment.appendChild(renderPin(sentences[n]));
+  }
+  return fragment;
+};
+
+pinMap.appendChild(renderMap());
 
 var lodgeTemplate = document.querySelector('#lodge-template').content;
-for (var i = 0; i < neighbors.length; i++) {
-  var neighborElement = lodgeTemplate.cloneNode(true);
-  neighborElement.querySelector('.lodge__title').textContent = neighbors[i].offer.title;
-  neighborElement.querySelector('.lodge__address').textContent = neighbors[i].offer.adress;
-  neighborElement.querySelector('.lodge__price').textContent = '{{' + neighbors[i].offer.price + '}}&#x20bd;/ночь';
-  var neighborType = function() {
-  if (neighbors[i].offer.type === 'flat') {
-  return 'Квартира';
-  } else if (neighbors[i].offer.type === 'bungalo') {
-  return 'Бунгало';
-  } else {
-    return 'Дом';
+var offerDialog = document.querySelector('#offer-dialog');
+var dialogPanel = offerDialog.querySelector('.dialog__panel');
+var dialogTitleAvatar = offerDialog.querySelector('.dialog__title img');
+
+var servicesList = function (data) {
+  var services = document.createDocumentFragment();
+  for (var i = 0; i < data.length; i++) {
+    var service = document.createElement('span');
+    service.className = 'feature__image feature__image--' + data[i];
+    services.appendChild(service);
   }
+  return services;
 };
-  neighborElement.querySelector('.lodge__type').textContent = neighborType();
-  neighborElement.querySelector('..lodge__rooms-and-guests').textContent = 'Для {{' + neighbors[i].offer.guests + '}} гостей в {{' + neighbors[i].offer.rooms + '}} комнатах';
-  neighborElement.querySelector('.lodge__checkin-time').textContent = 'Заезд после {{' + neighbors[i].offer.checkin + '}}, выезд до {{' + neighbors[i].offer.checkout + '}}';
-  // neighborElement.querySelector('.lodge__features').innerHTML = '<span class="feature__image feature__image--{{' + neighbors[i].offer.features[] + '}}"</span>';
-  neighborElement.querySelector('.lodge__description').textContent = neighbors[i].offer.description;
-}
+
+var renderLodge = function (data) {
+  var sentenceElement = lodgeTemplate.cloneNode(true);
+  sentenceElement.querySelector('.lodge__title').textContent = data.offer.title;
+  sentenceElement.querySelector('.lodge__address').textContent = data.offer.adress;
+  sentenceElement.querySelector('.lodge__price').textContent = data.offer.price + ' руб./ночь';
+  sentenceElement.querySelector('.lodge__type').textContent = data.offer.type.ru;
+  sentenceElement.querySelector('.lodge__rooms-and-guests').textContent = 'Для ' + data.offer.guests + ' гостей в ' + data.offer.rooms + ' комнатах';
+  sentenceElement.querySelector('.lodge__checkin-time').textContent = 'Заезд после ' + data.offer.checkin + ', выезд до ' + data.offer.checkout;
+  sentenceElement.querySelector('.lodge__features').appendChild(servicesList(data.offer.features));
+  sentenceElement.querySelector('.lodge__description').textContent = data.offer.description;
+
+  offerDialog.replaceChild(sentenceElement, dialogPanel);
+
+  dialogTitleAvatar.src = data.author.avatar;
+};
+
+renderLodge(sentences[0]);

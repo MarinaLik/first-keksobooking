@@ -23,7 +23,7 @@ var randomFeatures = function (data) {
   var features = data.slice();
   features.length = randomNumber(1, data.length);
   return features;
-}
+};
 
 var sentence = function () {
   return {

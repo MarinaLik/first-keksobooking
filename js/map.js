@@ -18,14 +18,14 @@ var OFFER_TYPES = [
 
 var OFFER_CHECKS = ['12:00', '13:00', '14:00'];
 var checkOut = function (time) {
-      if (time === '12:00') {
-      return time;
-      } else if (time === '13:00') {
-      return OFFER_CHECKS[randomNumber(0, 1)];
+  if (time === '12:00') {
+    return time;
+  } else if (time === '13:00') {
+    return OFFER_CHECKS[randomNumber(0, 1)];
       } else {
-      return arrRandomElem(OFFER_CHECKS);
+        return arrRandomElem(OFFER_CHECKS);
       }
-    };
+  };
 
 var OFFER_FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
 

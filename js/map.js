@@ -17,6 +17,16 @@ var OFFER_TYPES = [
 ];
 
 var OFFER_CHECKS = ['12:00', '13:00', '14:00'];
+var checkOut = function (time) {
+      if (time === '12:00') {
+      return time;
+      } else if (time === '13:00') {
+      return OFFER_CHECKS[randomNumber(0, 1)];
+      } else {
+      return arrRandomElem(OFFER_CHECKS);
+      }
+    };
+
 var OFFER_FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
 
 var randomFeatures = function (data) {
@@ -25,20 +35,20 @@ var randomFeatures = function (data) {
   return features;
 };
 
-var sentence = function () {
+var sentence = function (imgNum, title, time) {
   return {
     'author': {
-      'avatar': 'img/avatars/user0' + randomNumber(1, COUNT) + '.png'
+      'avatar': 'img/avatars/user0' + imgNum + '.png'
     },
     'offer': {
-      'title': arrRandomElem(OFFER_TITLES),
+      'title': title,
       'adress': randomNumber(300, 900) + ',' + randomNumber(100, 500),
       'price': randomNumber(1000, 1000000),
       'type': arrRandomElem(OFFER_TYPES),
       'rooms': randomNumber(1, 5),
       'guests': randomNumber(1, 10),
-      'checkin': arrRandomElem(OFFER_CHECKS),
-      'checkout': arrRandomElem(OFFER_CHECKS),
+      'checkin': time,
+      'checkout': checkOut(time),
       'features': randomFeatures(OFFER_FEATURES),
       'description': '',
       'photos': []
@@ -53,7 +63,10 @@ var sentence = function () {
 var sentences = [];
 var createOffers = function () {
   for (var i = 0; i < COUNT; i++) {
-    sentences.push(sentence());
+    var avatarNumber = i + 1;
+    var title = OFFER_TITLES[i];
+    var checkin = arrRandomElem(OFFER_CHECKS);
+    sentences.push(sentence(avatarNumber, title, checkin));
   }
 };
 createOffers();
@@ -99,7 +112,7 @@ var renderLodge = function (data) {
   var sentenceElement = lodgeTemplate.cloneNode(true);
   sentenceElement.querySelector('.lodge__title').textContent = data.offer.title;
   sentenceElement.querySelector('.lodge__address').textContent = data.offer.adress;
-  sentenceElement.querySelector('.lodge__price').textContent = data.offer.price + ' ₽/ночь';
+  sentenceElement.querySelector('.lodge__price').textContent = data.offer.price + '₽/ночь';
   sentenceElement.querySelector('.lodge__type').textContent = data.offer.type.ru;
   sentenceElement.querySelector('.lodge__rooms-and-guests').textContent = 'Для ' + data.offer.guests + ' гостей в ' + data.offer.rooms + ' комнатах';
   sentenceElement.querySelector('.lodge__checkin-time').textContent = 'Заезд после ' + data.offer.checkin + ', выезд до ' + data.offer.checkout;

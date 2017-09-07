@@ -1,12 +1,7 @@
 'use strict';
 var COUNT = 8;
-
-var randomNumber = function (min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-var arrRandomElem = function (arrName) {
-  return arrName[randomNumber(0, arrName.length - 1)];
-};
+var ESC_KEYCODE = 27;
+var ENTER_KEYCODE = 13;
 
 var OFFER_TITLES = ['Большая уютная квартира', 'Маленькая неуютная квартира', 'Огромный прекрасный дворец', 'Маленький ужасный дворец', 'Красивый гостевой домик', 'Некрасивый негостеприимный домик', 'Уютное бунгало далеко от моря', 'Неуютное бунгало по колено в воде'];
 
@@ -17,6 +12,19 @@ var OFFER_TYPES = [
 ];
 
 var OFFER_CHECKS = ['12:00', '13:00', '14:00'];
+var OFFER_FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
+
+var randomNumber = function (min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+var arrRandomElem = function (arrName) {
+  return arrName[randomNumber(0, arrName.length - 1)];
+};
+var randomFeatures = function (data) {
+  var features = data.slice();
+  features.length = randomNumber(1, data.length);
+  return features;
+};
 var checkOut = function (time) {
   if (time === '12:00') {
     return time;
@@ -27,21 +35,13 @@ var checkOut = function (time) {
   }
 };
 
-var OFFER_FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
-
-var randomFeatures = function (data) {
-  var features = data.slice();
-  features.length = randomNumber(1, data.length);
-  return features;
-};
-
-var sentence = function (imgNum, title, time) {
+var sentence = function (imgNum, caption, time) {
   return {
     'author': {
       'avatar': 'img/avatars/user0' + imgNum + '.png'
     },
     'offer': {
-      'title': title,
+      'title': caption,
       'adress': randomNumber(300, 900) + ',' + randomNumber(100, 500),
       'price': randomNumber(1000, 1000000),
       'type': arrRandomElem(OFFER_TYPES),
@@ -80,6 +80,7 @@ var renderPin = function (data) {
   newPin.className = 'pin';
   newPin.style = 'left: ' + (data.location.x + pinWidth / 2) + 'px; top: ' + (data.location.y + pinHeight) + 'px';
   newPin.innerHTML = '<img src="' + data.author.avatar + '" class="rounded" width="40" height="40">';
+  newPin.tabIndex = 0;
   return newPin;
 };
 
@@ -90,12 +91,12 @@ var renderMap = function () {
   }
   return fragment;
 };
-
 pinMap.appendChild(renderMap());
 
 var lodgeTemplate = document.querySelector('#lodge-template').content;
 var offerDialog = document.querySelector('#offer-dialog');
-var dialogPanel = offerDialog.querySelector('.dialog__panel');
+offerDialog.classList.add('hidden');
+
 var dialogTitleAvatar = offerDialog.querySelector('.dialog__title img');
 
 var servicesList = function (data) {
@@ -109,6 +110,7 @@ var servicesList = function (data) {
 };
 
 var renderLodge = function (data) {
+  var dialogPanel = offerDialog.querySelector('.dialog__panel');
   var sentenceElement = lodgeTemplate.cloneNode(true);
   sentenceElement.querySelector('.lodge__title').textContent = data.offer.title;
   sentenceElement.querySelector('.lodge__address').textContent = data.offer.adress;
@@ -124,4 +126,79 @@ var renderLodge = function (data) {
   dialogTitleAvatar.src = data.author.avatar;
 };
 
-renderLodge(sentences[0]);
+var removeActiveClass = function () {
+  var pin = pinMap.querySelector('.pin--active');
+  if (pin !== null) {
+    pin.classList.remove('pin--active');
+  }
+};
+
+var onMapClick = function (evt) {
+  offerDialog.classList.remove('hidden');
+  removeActiveClass();
+  var src = '';
+  var targetObject = {};
+
+  if (evt.target.classList.contains('pin')) {
+    src = evt.target.firstChild.src;
+    evt.target.classList.add('pin--active');
+  } else if (evt.target.tagName === 'IMG') {
+    src = evt.target.src;
+    evt.target.parentElement.classList.add('pin--active');
+  }
+  sentences.forEach(function (item, index) {
+    if (src.indexOf(item.author.avatar) >= 0) {
+      targetObject = sentences[index];
+    }
+  });
+
+  renderLodge(targetObject);
+};
+
+pinMap.addEventListener('click', onMapClick);
+
+pinMap.addEventListener('keydown', function (evt) {
+  if (evt.keyCode === ENTER_KEYCODE) {
+    var focused = document.activeElement;
+    var pins = pinMap.querySelectorAll('.pin');
+    for (var i = 0; i < pins.length; i++) {
+      if (pins[i] === focused) {
+        offerDialog.classList.remove('hidden');
+        removeActiveClass();
+        focused.classList.add('pin--active');
+        var src = focused.firstChild.src;
+        var targetObject = {};
+        sentences.forEach(function (item, index) {
+          if (src.indexOf(item.author.avatar) >= 0) {
+            targetObject = sentences[index];
+          }
+        });
+        renderLodge(targetObject);
+      }
+    }
+  }
+});
+
+var dialogClose = offerDialog.querySelector('.dialog__close');
+dialogClose.tabIndex = 0;
+
+var onCloseDialog = function (evt) {
+  evt.preventDefault();
+  offerDialog.classList.add('hidden');
+  removeActiveClass();
+};
+
+dialogClose.addEventListener('click', onCloseDialog);
+
+dialogClose.addEventListener('keydown', function (evt) {
+  if (evt.keyCode === ENTER_KEYCODE) {
+    onCloseDialog;
+  }
+});
+
+document.addEventListener('keydown', function (evt) {
+  if (evt.keyCode === ESC_KEYCODE) {
+    offerDialog.classList.add('hidden');
+    removeActiveClass();
+  }
+});

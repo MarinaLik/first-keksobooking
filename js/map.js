@@ -133,9 +133,13 @@ var removeActiveClass = function () {
   }
 };
 
-var onMapClick = function (evt) {
+var openCard = function () {
   offerDialog.classList.remove('hidden');
   removeActiveClass();
+};
+
+var onMapClick = function (evt) {
+  openCard();
   var src = '';
   var targetObject = {};
 
@@ -163,8 +167,7 @@ pinMap.addEventListener('keydown', function (evt) {
     var pins = pinMap.querySelectorAll('.pin');
     for (var i = 0; i < pins.length; i++) {
       if (pins[i] === focused) {
-        offerDialog.classList.remove('hidden');
-        removeActiveClass();
+        openCard();
         focused.classList.add('pin--active');
         var src = focused.firstChild.src;
         var targetObject = {};
@@ -182,23 +185,25 @@ pinMap.addEventListener('keydown', function (evt) {
 var dialogClose = offerDialog.querySelector('.dialog__close');
 dialogClose.tabIndex = 0;
 
-var onCloseDialog = function (evt) {
-  evt.preventDefault();
+var closeCard = function () {
   offerDialog.classList.add('hidden');
   removeActiveClass();
 };
 
-dialogClose.addEventListener('click', onCloseDialog);
+dialogClose.addEventListener('click', function (evt) {
+  evt.preventDefault();
+  closeCard();
+});
 
 dialogClose.addEventListener('keydown', function (evt) {
   if (evt.keyCode === ENTER_KEYCODE) {
-    onCloseDialog;
+    evt.preventDefault();
+    closeCard();
   }
 });
 
 document.addEventListener('keydown', function (evt) {
   if (evt.keyCode === ESC_KEYCODE) {
-    offerDialog.classList.add('hidden');
-    removeActiveClass();
+    closeCard();
   }
 });

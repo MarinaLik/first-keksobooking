@@ -161,7 +161,7 @@ var onMapClick = function (evt) {
 
 pinMap.addEventListener('click', onMapClick);
 
-pinMap.addEventListener('keydown', function (evt) {
+var onPinPressEnt = function (evt) {
   if (evt.keyCode === ENTER_KEYCODE) {
     var focused = document.activeElement;
     var pins = pinMap.querySelectorAll('.pin');
@@ -180,7 +180,9 @@ pinMap.addEventListener('keydown', function (evt) {
       }
     }
   }
-});
+};
+
+pinMap.addEventListener('keydown', onPinPressEnt);
 
 var dialogClose = offerDialog.querySelector('.dialog__close');
 dialogClose.tabIndex = 0;

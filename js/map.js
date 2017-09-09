@@ -197,7 +197,8 @@ dialogClose.addEventListener('click', onCardClose);
 
 dialogClose.addEventListener('keydown', function (evt) {
   if (evt.keyCode === ENTER_KEYCODE) {
-    onCardClose;
+    evt.preventDefault();
+    closeCard();
   }
 });
 

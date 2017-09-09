@@ -138,11 +138,19 @@ var openCard = function () {
   removeActiveClass();
 };
 
+var targetCard = function (data) {
+  var targetObject = {};
+  sentences.forEach(function (item, index) {
+    if (data.indexOf(item.author.avatar) >= 0) {
+      targetObject = sentences[index];
+    }
+  });
+  renderLodge(targetObject);
+};
+
 var onMapClick = function (evt) {
   openCard();
   var src = '';
-  var targetObject = {};
-
   if (evt.target.classList.contains('pin')) {
     src = evt.target.firstChild.src;
     evt.target.classList.add('pin--active');
@@ -150,13 +158,7 @@ var onMapClick = function (evt) {
     src = evt.target.src;
     evt.target.parentElement.classList.add('pin--active');
   }
-  sentences.forEach(function (item, index) {
-    if (src.indexOf(item.author.avatar) >= 0) {
-      targetObject = sentences[index];
-    }
-  });
-
-  renderLodge(targetObject);
+  targetCard(src);
 };
 
 pinMap.addEventListener('click', onMapClick);
@@ -165,20 +167,14 @@ var onPinPressEnt = function (evt) {
   if (evt.keyCode === ENTER_KEYCODE) {
     var focused = document.activeElement;
     var pins = pinMap.querySelectorAll('.pin');
-    for (var i = 0; i < pins.length; i++) {
-      if (pins[i] === focused) {
+    pins.forEach(function (item) {
+      if (item === focused) {
         openCard();
         focused.classList.add('pin--active');
         var src = focused.firstChild.src;
-        var targetObject = {};
-        sentences.forEach(function (item, index) {
-          if (src.indexOf(item.author.avatar) >= 0) {
-            targetObject = sentences[index];
-          }
-        });
-        renderLodge(targetObject);
+        targetCard(src);
       }
-    }
+    });
   }
 };
 
@@ -192,15 +188,16 @@ var closeCard = function () {
   removeActiveClass();
 };
 
-dialogClose.addEventListener('click', function (evt) {
+var onCardClose = function (evt) {
   evt.preventDefault();
   closeCard();
-});
+};
+
+dialogClose.addEventListener('click', onCardClose);
 
 dialogClose.addEventListener('keydown', function (evt) {
   if (evt.keyCode === ENTER_KEYCODE) {
-    evt.preventDefault();
-    closeCard();
+    onCardClose;
   }
 });
 

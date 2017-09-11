@@ -207,3 +207,14 @@ document.addEventListener('keydown', function (evt) {
     closeCard();
   }
 });
+
+var selectTimein = document.querySelector('#timein');
+var selectTimeout = document.querySelector('#timeout');
+
+console.log(selectTimein.value);
+
+var onChengeTime = function () {
+  selectTimeout.value = (selectTimein.selectedIndex >= 0) ? selectTimein.value : '12:00';
+};
+
+selectTimein.addEventListener('change', onChengeTime);
